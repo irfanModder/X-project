@@ -1,0 +1,14 @@
+name: Build EXE
+on: [push]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Compile
+        run: g++ main.cpp -o DatabaseMain.exe -static -lurlmon
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: payload
+          path: DatabaseMain.exe
